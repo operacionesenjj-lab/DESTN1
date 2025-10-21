@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Destinos</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 50%, #5dade2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-weight: 500;
+        }
+
+        h1 {
+            color: white;
+            font-size: 3rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            font-weight: 300;
+            letter-spacing: 2px;
+        }
+
+        .button-container {
+            display: flex;
+            gap: 1.5rem;
+            flex-wrap: wrap;
+            justify-content: center;
+            max-width: 900px;
+            width: 100%;
+        }
+
+        button {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            flex: 1;
+            min-width: 220px;
+            text-transform: uppercase;
+            text-align: center;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+
+        .action-button {
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            flex: 1;
+            min-width: 220px;
+            text-transform: uppercase;
+            text-align: center;
+            text-decoration: none;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            font-weight: 600;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        button:hover {
+            background: rgba(236, 240, 241, 0.9);
+            color: #2c3e50;
+        }
+
+        .action-button:hover {
+            background: rgba(236, 240, 241, 0.9);
+            color: #2c3e50;
+        }
+
+        .camera-icon {
+            font-size: 1.4em;
+            margin-right: 8px;
+        }
+
+        @media (max-width: 768px) {
+            body {
+                padding: 15px;
+            }
+
+            h1 {
+                font-size: 2.2rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .button-container {
+                flex-direction: column;
+                width: 90%;
+                gap: 1rem;
+            }
+
+            button {
+                min-width: 100%;
+                margin-bottom: 0.8rem;
+                padding: 1.2rem;
+                font-size: 1.1rem;
+            }
+
+            .action-button {
+                min-width: 100%;
+                margin-bottom: 1rem;
+                padding: 1.2rem;
+                font-size: 1.1rem;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <h1>Destinos</h1>
+    <div class="button-container">
+        <button class="action-button" onclick="abrirEscaner()">
+            <span class="camera-icon">📷</span> Cámara
+        </button>
+        <button onclick="handleClick('manifiestos')">Manifiestos</button>
+    </div>
+
+    <script>
+        function abrirEscaner() {
+            // Ir a la página dedicada de cámara
+            window.location.href = 'camara.html';
+        }
+        
+        function handleClick(action) {
+            if (action === 'manifiestos') {
+                window.location.href = 'manifiestos.html';
+            }
+        }
+
+    </script>
+</body>
+</html> 

@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manifiestos - Enrutador</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 50%, #5dade2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+        }
+        .header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            max-width: 1200px;
+        }
+        .back-button {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            text-transform: uppercase;
+            backdrop-filter: blur(10px);
+            font-weight: 600;
+        }
+        .back-button:hover {
+            background: rgba(236, 240, 241, 0.9);
+            color: #2c3e50;
+        }
+        h1 {
+            color: white;
+            font-size: 2.5rem;
+            margin: 0;
+            text-align: center;
+        }
+        .action-button {
+            padding: 0.8rem 1.5rem;
+            font-size: 1rem;
+            border: 2px solid #ecf0f1;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            text-transform: uppercase;
+            backdrop-filter: blur(10px);
+            font-weight: 600;
+            margin: 0.5rem;
+        }
+        .action-button:hover {
+            background: rgba(236, 240, 241, 0.9);
+            color: #2c3e50;
+        }
+        .action-button:disabled {
+            background: rgba(255, 255, 255, 0.05);
+            color: rgba(255, 255, 255, 0.3);
+            cursor: not-allowed;
+        }
+        .main-container {
+            width: 100%;
+            max-width: 1200px;
+            padding: 2rem;
+        }
+        .carpetas-container {
+            margin-top: 2rem;
+        }
+        .carpeta-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            margin: 1rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            overflow: hidden;
+        }
+        .carpeta-header {
+            padding: 1.5rem;
+            background: rgba(52, 152, 219, 0.2);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background-color 0.2s ease;
+        }
+        .carpeta-header:hover {
+            background: rgba(52, 152, 219, 0.3);
+        }
+        .carpeta-nombre {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: white;
+        }
+        .carpeta-contenido {
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            display: none;
+        }
+        .carpeta-contenido.expanded {
+            display: block;
+        }
+        .manifiesto-item {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            margin: 1rem 0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        .manifiesto-header {
+            padding: 1rem;
+            background: rgba(46, 204, 113, 0.2);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .manifiesto-header:hover {
+            background: rgba(46, 204, 113, 0.3);
+        }
+        .manifiesto-detalle {
+            padding: 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            display: none;
+            overflow-x: auto;
+        }
+        .manifiesto-detalle.expanded {
+            display: block;
+        }
+        .tabla-manifiestos {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            overflow: hidden;
+            min-width: 600px;
+        }
+        .tabla-manifiestos th,
+        .tabla-manifiestos td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: #000;
+            background: rgba(255, 255, 255, 0.9);
+        }
+        .tabla-manifiestos th {
+            background: rgba(52, 152, 219, 0.8);
+            color: white;
+            font-weight: 600;
+        }
+        .cuadros-piezas {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.3rem;
+            margin: 0.5rem 0;
+        }
+        .cuadro-pieza {
+            width: 25px;
+            height: 25px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: white;
+            background: rgba(255, 255, 255, 0.1);
+            cursor: pointer;
+        }
+        .cuadro-pieza.escaneado {
+            background: #27ae60;
+            border-color: #27ae60;
+            color: white;
+        }
+        .cuadro-pieza.escaneado::after {
+            content: '✓';
+            font-size: 0.7rem;
+        }
+        .file-input {
+            display: none;
+        }
+        .mensaje {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            animation: slideIn 0.3s ease;
+        }
+        .mensaje.success {
+            background: #27ae60;
+        }
+        .mensaje.error {
+            background: #e74c3c;
+        }
+        .faltantes-container {
+            background: rgba(231, 76, 60, 0.1);
+            border: 1px solid rgba(231, 76, 60, 0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            display: none;
+        }
+        .faltantes-container.visible {
+            display: block;
+        }
+        .faltante-item {
+            background: rgba(231, 76, 60, 0.2);
+            padding: 0.5rem;
+            margin: 0.3rem 0;
+            border-radius: 4px;
+            color: white;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            body { padding: 10px; }
+            .header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+            h1 { font-size: 1.8rem; text-align: left; }
+            .main-container { padding: 0.8rem; max-width: 100%; }
+            .cuadro-pieza { width: 22px; height: 22px; font-size: 0.75rem; }
+            .cuadros-piezas { gap: 0.25rem; }
+            .tabla-manifiestos { min-width: 100%; font-size: 0.85rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-button" onclick="goBack()">Volver</button>
+        <h1>Manifiestos</h1>
+    </div>
+
+    <div class="main-container">
+        <div class="carpetas-controls" style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem; flex-wrap: wrap;">
+            <button id="agregarCarpeta" class="action-button" onclick="agregarCarpeta()">
+                📁 Agregar Carpeta
+            </button>
+            <button id="eliminarCarpeta" class="action-button" onclick="eliminarCarpeta()" disabled>
+                🗑️ Eliminar Carpeta
+            </button>
+            <button id="revisarFaltantes" class="action-button" onclick="revisarFaltantes()">
+                🔍 Revisar Faltantes
+            </button>
+        </div>
+
+        <div class="carpetas-container" id="carpetasContainer">
+            <!-- Las carpetas se mostrarán aquí -->
+        </div>
+
+        <div class="faltantes-container" id="faltantesContainer">
+            <h3>📋 Manifiestos Seleccionados para Revisión</h3>
+            <div id="manifestosSeleccionados"></div>
+            <button class="action-button" onclick="confirmarRevision()" style="margin-top: 1rem;">
+                ✅ Confirmar Revisión
+            </button>
+            <button class="action-button" onclick="cancelarRevision()">
+                ❌ Cancelar
+            </button>
+        </div>
+
+        <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls" onchange="handleFileUpload(event)">
+    </div>
+
+    <script>
+        let carpetas = [];
+        let modoEliminarCarpetas = false;
+        let modoRevisarFaltantes = false;
+        let manifestosParaRevision = [];
+        let manifiestosEscaneados = {};
+        let carpetaEnModoEliminar = null;
+
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
+        function mostrarMensaje(mensaje, tipo = 'success') {
+            const mensajeDiv = document.createElement('div');
+            mensajeDiv.className = `mensaje ${tipo}`;
+            mensajeDiv.textContent = mensaje;
+            document.body.appendChild(mensajeDiv);
+
+            setTimeout(() => {
+                mensajeDiv.remove();
+            }, 3000);
+        }
+
+        function guardarDatos() {
+            try {
+                localStorage.setItem('carpetas_manifiestos', JSON.stringify(carpetas));
+            } catch (error) {
+                console.error('Error guardando datos:', error);
+                mostrarMensaje('Error al guardar los datos.', 'error');
+            }
+        }
+
+        function cargarDatos() {
+            try {
+                const datosGuardados = localStorage.getItem('carpetas_manifiestos');
+                if (datosGuardados) {
+                    carpetas = JSON.parse(datosGuardados);
+                } else {
+                    carpetas = [];
+                }
+
+                const escaneados = localStorage.getItem('manifiestos_escaneados');
+                if (escaneados) {
+                    manifiestosEscaneados = JSON.parse(escaneados);
+                } else {
+                    manifiestosEscaneados = {};
+                }
+
+                // Asegurar que todas las carpetas tengan la propiedad expandida
+                carpetas.forEach(carpeta => {
+                    if (typeof carpeta.expandida === 'undefined') {
+                        carpeta.expandida = false;
+                    }
+                    carpeta.manifiestos.forEach(manifiesto => {
+                        if (typeof manifiesto.expandido === 'undefined') {
+                            manifiesto.expandido = false;
+                        }
+                        if (typeof manifiesto.mostrarTodos === 'undefined') {
+                            manifiesto.mostrarTodos = false;
+                        }
+                    });
+                });
+
+            } catch (error) {
+                console.error('Error cargando datos:', error);
+                carpetas = [];
+                manifiestosEscaneados = {};
+            }
+        }
+
+        function agregarCarpeta() {
+            const nombre = prompt('Ingresa el nombre de la nueva carpeta:');
+            if (!nombre || nombre.trim() === '') {
+                mostrarMensaje('Nombre de carpeta inválido.', 'error');
+                return;
+            }
+
+            const nuevaCarpeta = {
+                id: Date.now(),
+                nombre: nombre.trim(),
+                fecha: new Date().toLocaleString(),
+                manifiestos: [],
+                expandida: false
+            };
+
+            carpetas.push(nuevaCarpeta);
+            guardarDatos();
+            actualizarCarpetas();
+            actualizarBotones();
+            mostrarMensaje(`Carpeta "${nombre}" creada exitosamente.`);
+        }
+
+        function eliminarCarpeta() {
+            if (carpetas.length === 0) {
+                mostrarMensaje('No hay carpetas para eliminar.', 'error');
+                return;
+            }
+
+            if (!modoEliminarCarpetas) {
+                modoEliminarCarpetas = true;
+                carpetaEnModoEliminar = null; // Desactivar otros modos
+                modoRevisarFaltantes = false;
+                document.getElementById('faltantesContainer').classList.remove('visible');
+                mostrarMensaje('Modo eliminación de carpetas activado. Selecciona las carpetas a eliminar o haz clic nuevamente para cancelar.');
+                actualizarCarpetas();
+            } else {
+                const carpetasSeleccionadas = carpetas.filter(carpeta => carpeta.seleccionada);
+                
+                if (carpetasSeleccionadas.length === 0) {
+                    // Si no hay selección, cancelar modo
+                    modoEliminarCarpetas = false;
+                    // Limpiar selecciones
+                    carpetas.forEach(carpeta => carpeta.seleccionada = false);
+                    actualizarCarpetas();
+                    mostrarMensaje('Modo eliminación cancelado.');
+                    return;
+                }
+
+                if (confirm(`¿Estás seguro de eliminar ${carpetasSeleccionadas.length} carpeta(s)?`)) {
+                    carpetas = carpetas.filter(carpeta => !carpeta.seleccionada);
+                    modoEliminarCarpetas = false;
+                    guardarDatos();
+                    actualizarCarpetas();
+                    mostrarMensaje(`${carpetasSeleccionadas.length} carpeta(s) eliminada(s).`);
+                } else {
+                    // Si cancela la confirmación, mantener el modo pero limpiar selecciones
+                    carpetas.forEach(carpeta => carpeta.seleccionada = false);
+                    actualizarCarpetas();
+                }
+            }
+        }
+
+        function eliminarManifiestoCarpeta(carpetaId) {
+            const carpeta = carpetas.find(c => c.id === carpetaId);
+            if (!carpeta || carpeta.manifiestos.length === 0) {
+                mostrarMensaje('No hay manifiestos para eliminar en esta carpeta.', 'error');
+                return;
+            }
+
+            if (carpetaEnModoEliminar !== carpetaId) {
+                // Activar modo eliminar para esta carpeta
+                carpetaEnModoEliminar = carpetaId;
+                modoEliminarCarpetas = false;
+                modoRevisarFaltantes = false;
+                document.getElementById('faltantesContainer').classList.remove('visible');
+                mostrarMensaje('Modo eliminación activado. Selecciona los manifiestos a eliminar o haz clic nuevamente para cancelar.');
+                actualizarCarpetas();
+            } else {
+                // Confirmar eliminación
+                const manifestosSeleccionados = carpeta.manifiestos.filter(m => m.seleccionado);
+                
+                if (manifestosSeleccionados.length === 0) {
+                    // Si no hay selección, cancelar modo
+                    carpetaEnModoEliminar = null;
+                    // Limpiar selecciones
+                    carpeta.manifiestos.forEach(m => m.seleccionado = false);
+                    actualizarCarpetas();
+                    mostrarMensaje('Modo eliminación cancelado.');
+                    return;
+                }
+
+                if (confirm(`¿Estás seguro de eliminar ${manifestosSeleccionados.length} manifiesto(s) de la carpeta "${carpeta.nombre}"?`)) {
+                    carpeta.manifiestos = carpeta.manifiestos.filter(m => !m.seleccionado);
+                    carpetaEnModoEliminar = null;
+                    guardarDatos();
+                    actualizarCarpetas();
+                    mostrarMensaje(`${manifestosSeleccionados.length} manifiesto(s) eliminado(s).`);
+                } else {
+                    // Si cancela la confirmación, mantener el modo pero limpiar selecciones
+                    carpeta.manifiestos.forEach(m => m.seleccionado = false);
+                    actualizarCarpetas();
+                }
+            }
+        }
+
+        function toggleCarpeta(carpetaId) {
+            if (modoEliminarCarpetas) return;
+            
+            const carpeta = carpetas.find(c => c.id === carpetaId);
+            if (carpeta) {
+                carpeta.expandida = !carpeta.expandida;
+                guardarDatos();
+                actualizarCarpetas();
+            }
+        }
+
+        function toggleManifiesto(manifestoId) {
+            if (carpetaEnModoEliminar) {
+                // En modo eliminar, marcar/desmarcar para selección
+                carpetas.forEach(carpeta => {
+                    const manifiesto = carpeta.manifiestos.find(m => m.id === manifestoId);
+                    if (manifiesto && carpeta.id === carpetaEnModoEliminar) {
+                        manifiesto.seleccionado = !manifiesto.seleccionado;
+                    }
+                });
+                actualizarCarpetas();
+                return;
+            }
+            
+            // Buscar el manifiesto y alternar su estado expandido
+            carpetas.forEach(carpeta => {
+                const manifiesto = carpeta.manifiestos.find(m => m.id === manifestoId);
+                if (manifiesto) {
+                    manifiesto.expandido = !manifiesto.expandido;
+                    
+                    // Si es una lista de faltantes y se está expandiendo, actualizar datos
+                    if (manifiesto.tipo === 'faltantes' && manifiesto.expandido) {
+                        // Recargar datos escaneados para mostrar información actualizada
+                        try {
+                            const escaneados = localStorage.getItem('manifiestos_escaneados');
+                            if (escaneados) {
+                                manifiestosEscaneados = JSON.parse(escaneados);
+                            }
+                        } catch (error) {
+                            console.error('Error cargando datos escaneados:', error);
+                        }
+                    }
+                }
+            });
+            guardarDatos();
+            actualizarCarpetas();
+        }
+
+        function agregarManifiesto(carpetaId) {
+            document.getElementById('fileInput').dataset.carpetaId = carpetaId;
+            document.getElementById('fileInput').click();
+        }
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            const carpetaId = parseInt(event.target.dataset.carpetaId);
+            
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    
+                    // Leer con headers para obtener los nombres de columnas
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    
+                    if (jsonData.length === 0) {
+                        mostrarMensaje('El archivo Excel está vacío.', 'error');
+                        return;
+                    }
+
+                    // Convertir a objetos con las columnas correctas
+                    const datosFormateados = jsonData.slice(1).map(row => ({
+                        RECIBO: row[0] || '',      // Columna A
+                        AGENTE: row[1] || '',      // Columna B
+                        CONSIGNATARIO: row[2] || '', // Columna C
+                        PIEZAS: parseInt(row[3]) || 0, // Columna D
+                        DESTINO: row[5] || ''      // Columna F
+                    })).filter(row => row.RECIBO); // Filtrar filas vacías
+
+
+                    const nuevoManifiesto = {
+                        id: Date.now(),
+                        nombre: file.name,
+                        fecha: new Date().toLocaleString(),
+                        datos: datosFormateados,
+                        expandido: false,
+                        mostrarTodos: false
+                    };
+
+                    const carpeta = carpetas.find(c => c.id === carpetaId);
+                    if (carpeta) {
+                        carpeta.manifiestos.push(nuevoManifiesto);
+                        guardarDatos();
+                        actualizarCarpetas();
+                        actualizarBotones();
+                        mostrarMensaje(`Manifiesto "${file.name}" agregado exitosamente con ${datosFormateados.length} registros.`);
+                    }
+                } catch (error) {
+                    console.error('Error procesando archivo:', error);
+                    mostrarMensaje('Error al procesar el archivo Excel.', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+            event.target.value = '';
+        }
+
+        function generarTablaManifiesto(manifiesto) {
+            // Si es una lista de faltantes, generar contenido especial
+            if (manifiesto.tipo === 'faltantes') {
+                return generarTablaFaltantes(manifiesto);
+            }
+
+            if (!manifiesto.datos || manifiesto.datos.length === 0) {
+                return '<p style="color: rgba(255,255,255,0.5);">No hay datos para mostrar.</p>';
+            }
+
+            const mostrarTodos = manifiesto.mostrarTodos || false;
+            const datosAMostrar = mostrarTodos ? manifiesto.datos : manifiesto.datos.slice(0, 10);
+            
+            const filas = datosAMostrar.map(row => {
+                const recibo = row.RECIBO || '';
+                const agente = row.AGENTE || '';
+                const consignatario = row.CONSIGNATARIO || '';
+                const piezas = row.PIEZAS || 0;
+                const destino = row.DESTINO || '';
+                
+                return `
+                    <tr>
+                        <td style="color: #000; font-weight: bold;">${recibo}</td>
+                        <td style="color: #000;">${agente}</td>
+                        <td style="color: #000;">${consignatario}</td>
+                        <td style="color: #000; font-weight: bold;">${piezas}</td>
+                        <td style="color: #000;">${destino}</td>
+                    </tr>
+                    <tr>
+                        <td colspan="5" style="padding: 0.5rem; background: rgba(255,255,255,0.05);">
+                            <div class="cuadros-piezas">
+                                ${generarCuadrosPiezas(manifiesto.id, recibo, piezas)}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            const botonVerMas = !mostrarTodos && manifiesto.datos.length > 10 
+                ? `<tr><td colspan="5" style="text-align: center; padding: 1rem;">
+                     <button class="action-button" onclick="toggleMostrarTodos(${manifiesto.id})" style="font-size: 0.9rem;">
+                         Ver todos los ${manifiesto.datos.length} registros
+                     </button>
+                   </td></tr>`
+                : '';
+
+            const botonVerMenos = mostrarTodos && manifiesto.datos.length > 10
+                ? `<tr><td colspan="5" style="text-align: center; padding: 1rem;">
+                     <button class="action-button" onclick="toggleMostrarTodos(${manifiesto.id})" style="font-size: 0.9rem;">
+                         Mostrar solo los primeros 10 registros
+                     </button>
+                   </td></tr>`
+                : '';
+
+            return `
+                <table class="tabla-manifiestos">
+                    <thead>
+                        <tr>
+                            <th>RECIBO</th>
+                            <th>AGENTE</th>
+                            <th>CONSIGNATARIO</th>
+                            <th>PIEZAS</th>
+                            <th>DESTINO</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filas}
+                        ${botonVerMas}
+                        ${botonVerMenos}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function generarTablaFaltantes(listaFaltantes) {
+            // Encontrar el manifiesto original
+            const manifestoOriginal = carpetas
+                .flatMap(c => c.manifiestos)
+                .find(m => m.id === listaFaltantes.manifestoOriginal);
+
+            if (!manifestoOriginal || !manifestoOriginal.datos) {
+                return '<p style="color: rgba(255,255,255,0.5);">No se encontró el manifiesto original.</p>';
+            }
+
+            // Generar lista de faltantes actualizada
+            const faltantes = [];
+            manifestoOriginal.datos.forEach(row => {
+                const piezas = parseInt(row.PIEZAS) || 0;
+                const faltantesPieza = [];
+
+                for (let i = 1; i <= piezas; i++) {
+                    const key = `${manifestoOriginal.id}_${row.RECIBO}_${i}`;
+                    if (!manifiestosEscaneados[key]) {
+                        faltantesPieza.push(i);
+                    }
+                }
+
+                if (faltantesPieza.length > 0) {
+                    faltantes.push({
+                        recibo: row.RECIBO,
+                        consignatario: row.CONSIGNATARIO || '',
+                        destino: row.DESTINO || '',
+                        faltantes: faltantesPieza,
+                        total: piezas
+                    });
+                }
+            });
+
+            if (faltantes.length === 0) {
+                return `
+                    <div style="text-align: center; color: #27ae60; padding: 2rem; background: rgba(39, 174, 96, 0.1); border-radius: 8px;">
+                        <h3>🎉 ¡Excelente!</h3>
+                        <p>No hay piezas faltantes en este manifiesto.</p>
+                        <button class="action-button" onclick="eliminarListaFaltantesEspecifica(${listaFaltantes.id})" style="background-color: #e74c3c; margin-top: 1rem;">
+                            🗑️ Eliminar Lista
+                        </button>
+                    </div>
+                `;
+            }
+
+            const filasFaltantes = faltantes.map(item => `
+                <tr>
+                    <td style="color: #000; font-weight: bold;">${item.recibo}</td>
+                    <td style="color: #000;">${item.consignatario}</td>
+                    <td style="color: #000;">${item.destino}</td>
+                    <td style="color: #e74c3c; font-weight: bold;">${item.faltantes.length} de ${item.total}</td>
+                    <td style="color: #e74c3c;">[${item.faltantes.join(', ')}]</td>
+                </tr>
+            `).join('');
+
+            return `
+                <div style="margin-bottom: 1rem;">
+                    <button class="action-button" onclick="eliminarListaFaltantesEspecifica(${listaFaltantes.id})" style="background-color: #e74c3c; font-size: 0.9rem;">
+                        🗑️ Eliminar Lista de Faltantes
+                    </button>
+                </div>
+                <table class="tabla-manifiestos">
+                    <thead>
+                        <tr>
+                            <th>RECIBO</th>
+                            <th>CONSIGNATARIO</th>
+                            <th>DESTINO</th>
+                            <th>FALTANTES</th>
+                            <th>PIEZAS</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${filasFaltantes}
+                    </tbody>
+                </table>
+            `;
+        }
+
+        function generarCuadrosPiezas(manifestoId, recibo, cantidad) {
+            if (!cantidad || cantidad <= 0) {
+                return '<div style="color: #bdc3c7; font-size: 0.85rem;">No hay piezas para mostrar</div>';
+            }
+            
+            // Verificar si este recibo específico debe mostrar todos los cuadros
+            const keyMostrarTodos = `mostrar_todos_${manifestoId}_${recibo}`;
+            const mostrarTodos = localStorage.getItem(keyMostrarTodos) === 'true';
+            
+            const cantidadMostrar = (mostrarTodos || cantidad <= 50) ? cantidad : 50;
+            const cuadros = Array.from({length: cantidadMostrar}, (_, i) => {
+                const numeroPieza = i + 1;
+                const key = `${manifestoId}_${recibo}_${numeroPieza}`;
+                const escaneado = manifiestosEscaneados[key] ? 'escaneado' : '';
+                return `<div class="cuadro-pieza ${escaneado}" data-key="${key}" title="Pieza ${numeroPieza} de ${cantidad}">${numeroPieza}</div>`;
+            }).join('');
+            
+            const aviso = cantidad > 50 
+                ? `<div style="width: 100%; color: #bdc3c7; font-size: 0.85rem; margin-bottom: 0.5rem;">Mostrando ${cantidadMostrar} de ${cantidad} piezas</div>`
+                : '';
+            
+            let botones = '';
+            if (cantidad > 50) {
+                if (!mostrarTodos) {
+                    botones = `
+                        <div style="width: 100%; margin-top: 0.5rem;">
+                            <button class="action-button" onclick="toggleMostrarCuadros('${manifestoId}', '${recibo}')" 
+                                    style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">
+                                Ver todas las ${cantidad} piezas
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    botones = `
+                        <div style="width: 100%; margin-top: 0.5rem;">
+                            <button class="action-button" onclick="toggleMostrarCuadros('${manifestoId}', '${recibo}')" 
+                                    style="font-size: 0.8rem; padding: 0.4rem 0.8rem;">
+                                Mostrar solo las primeras 50 piezas
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+            
+            return aviso + cuadros + botones;
+        }
+
+        function toggleMostrarTodos(manifestoId) {
+            // Buscar el manifiesto en todas las carpetas
+            carpetas.forEach(carpeta => {
+                const manifiesto = carpeta.manifiestos.find(m => m.id === manifestoId);
+                if (manifiesto) {
+                    manifiesto.mostrarTodos = !manifiesto.mostrarTodos;
+                }
+            });
+            guardarDatos();
+            actualizarCarpetas();
+        }
+
+        function toggleMostrarCuadros(manifestoId, recibo) {
+            const keyMostrarTodos = `mostrar_todos_${manifestoId}_${recibo}`;
+            const mostrarTodos = localStorage.getItem(keyMostrarTodos) === 'true';
+            
+            // Alternar el estado
+            localStorage.setItem(keyMostrarTodos, (!mostrarTodos).toString());
+            
+            // Actualizar solo la vista sin recargar toda la página
+            actualizarCarpetas();
+        }
+
+        function revisarFaltantes() {
+            if (!modoRevisarFaltantes) {
+                modoRevisarFaltantes = true;
+                modoEliminarCarpetas = false; // Desactivar otros modos
+                modoEliminarManifiestos = false;
+                manifestosParaRevision = [];
+                document.getElementById('faltantesContainer').classList.add('visible');
+                mostrarMensaje('Selecciona los manifiestos a revisar haciendo clic en ellos.');
+                actualizarCarpetas();
+            }
+        }
+
+        function cancelarRevision() {
+            modoRevisarFaltantes = false;
+            modoEliminarCarpetas = false;
+            carpetaEnModoEliminar = null;
+            manifestosParaRevision = [];
+            
+            // Limpiar todas las selecciones
+            carpetas.forEach(carpeta => {
+                carpeta.seleccionada = false;
+                carpeta.manifiestos.forEach(m => m.seleccionado = false);
+            });
+            
+            document.getElementById('faltantesContainer').classList.remove('visible');
+            actualizarCarpetas();
+            mostrarMensaje('Todos los modos cancelados.');
+        }
+
+        function confirmarRevision() {
+            if (manifestosParaRevision.length === 0) {
+                mostrarMensaje('No has seleccionado ningún manifiesto.', 'error');
+                return;
+            }
+
+            // Crear listas de faltantes dentro de cada carpeta
+            manifestosParaRevision.forEach(manifiesto => {
+                const carpeta = carpetas.find(c => c.manifiestos.some(m => m.id === manifiesto.id));
+                if (carpeta) {
+                    // Crear lista de faltantes para este manifiesto
+                    const nombreFaltantes = `FALTANTES (${manifiesto.nombre})`;
+
+                    // Verificar si ya existe una lista de faltantes para este manifiesto
+                    const faltantesExistente = carpeta.manifiestos.find(m => m.nombre === nombreFaltantes);
+
+                    if (!faltantesExistente) {
+                        const listaFaltantes = {
+                            id: Date.now() + Math.random(),
+                            nombre: nombreFaltantes,
+                            fecha: new Date().toLocaleString(),
+                            tipo: 'faltantes',
+                            manifestoOriginal: manifiesto.id,
+                            datos: [],
+                            expandido: false,
+                            mostrarTodos: false
+                        };
+
+                        carpeta.manifiestos.push(listaFaltantes);
+                    }
+                }
+            });
+
+            // Limpiar selección y cerrar modo
+            manifestosParaRevision = [];
+            modoRevisarFaltantes = false;
+            document.getElementById('faltantesContainer').classList.remove('visible');
+
+            guardarDatos();
+            actualizarCarpetas();
+            mostrarMensaje('Listas de faltantes creadas en cada carpeta. Se actualizarán automáticamente.');
+        }
+
+        function seleccionarManifiesto(manifiesto) {
+            if (!modoRevisarFaltantes) return;
+            
+            const index = manifestosParaRevision.findIndex(m => m.id === manifiesto.id);
+            if (index === -1) {
+                manifestosParaRevision.push(manifiesto);
+            } else {
+                manifestosParaRevision.splice(index, 1);
+            }
+            
+            actualizarManifiestoSeleccionado();
+        }
+
+        function actualizarManifiestoSeleccionado() {
+            let html = '<h4>Manifiestos Seleccionados:</h4>';
+            if (manifestosParaRevision.length === 0) {
+                html += '<p>Ningún manifiesto seleccionado.</p>';
+            } else {
+                manifestosParaRevision.forEach(m => {
+                    html += `<div style="padding: 0.5rem; background: rgba(52, 152, 219, 0.2); margin: 0.3rem 0; border-radius: 4px;">${m.nombre}</div>`;
+                });
+            }
+            document.getElementById('manifestosSeleccionados').innerHTML = html;
+        }
+
+        function toggleSeleccionCarpeta(carpetaId) {
+            const carpeta = carpetas.find(c => c.id === carpetaId);
+            if (carpeta) {
+                carpeta.seleccionada = !carpeta.seleccionada;
+            }
+        }
+
+        function actualizarCarpetas() {
+            const container = document.getElementById('carpetasContainer');
+            
+            if (carpetas.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: rgba(255,255,255,0.7); padding: 2rem;">No hay carpetas creadas. Haz clic en "Agregar Carpeta" para crear una.</p>';
+                return;
+            }
+
+            let html = '';
+            carpetas.forEach(carpeta => {
+                const checkbox = modoEliminarCarpetas 
+                    ? `<input type="checkbox" onchange="toggleSeleccionCarpeta(${carpeta.id})" style="margin-right: 10px;">` 
+                    : '';
+                
+                const expandIcon = carpeta.expandida ? '▼' : '▶';
+                const contenidoClass = carpeta.expandida ? 'expanded' : '';
+                
+                html += `
+                    <div class="carpeta-item">
+                        <div class="carpeta-header" onclick="${modoEliminarCarpetas ? '' : `toggleCarpeta(${carpeta.id})`}">
+                            <div>
+                                ${checkbox}
+                                <span style="margin-right: 10px;">${expandIcon}</span>
+                                <span class="carpeta-nombre">${carpeta.nombre}</span>
+                                <small style="color: rgba(255,255,255,0.7); margin-left: 1rem;">${carpeta.fecha}</small>
+                            </div>
+                            <div>
+                                <span style="color: rgba(255,255,255,0.8);">${carpeta.manifiestos.length} manifiesto(s)</span>
+                            </div>
+                        </div>
+                        <div class="carpeta-contenido ${contenidoClass}">
+                            <div style="display: flex; gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                                <button class="action-button" onclick="agregarManifiesto(${carpeta.id})">
+                                    📄 Agregar Manifiesto
+                                </button>
+                                <button class="action-button" onclick="eliminarManifiestoCarpeta(${carpeta.id})" ${carpeta.manifiestos.length === 0 ? 'disabled' : ''}>
+                                    🗑️ Eliminar Manifiesto
+                                </button>
+                            </div>
+                            ${generarManifiestos(carpeta)}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function generarManifiestos(carpeta) {
+            if (carpeta.manifiestos.length === 0) {
+                return '<p style="color: rgba(255,255,255,0.7);">No hay manifiestos en esta carpeta.</p>';
+            }
+
+            return carpeta.manifiestos.map(manifiesto => {
+                const expandIcon = manifiesto.expandido ? '▼' : '▶';
+                const detalleClass = manifiesto.expandido ? 'expanded' : '';
+
+                // Estilo especial para listas de faltantes
+                const esFaltantes = manifiesto.tipo === 'faltantes';
+                const estiloFaltantes = esFaltantes ? 'background: rgba(231, 76, 60, 0.2); border: 1px solid rgba(231, 76, 60, 0.4);' : '';
+                const iconoFaltantes = esFaltantes ? '📋' : '';
+
+                // Checkbox para modo eliminar manifiestos (solo si esta carpeta está en modo eliminar)
+                const checkbox = (carpetaEnModoEliminar === carpeta.id)
+                    ? `<input type="checkbox" ${manifiesto.seleccionado ? 'checked' : ''} onchange="toggleManifiesto(${manifiesto.id})" style="margin-right: 10px;">`
+                    : '';
+
+                // Selección para revisar faltantes (no permitir seleccionar listas de faltantes)
+                const seleccionado = modoRevisarFaltantes && !esFaltantes && manifestosParaRevision.some(m => m.id === manifiesto.id);
+                const seleccionClass = seleccionado ? 'style="background: rgba(52, 152, 219, 0.4);"' : '';
+
+                // Determinar la función onclick
+                let onclickFunction = '';
+                if (carpetaEnModoEliminar === carpeta.id) {
+                    onclickFunction = `toggleManifiesto(${manifiesto.id})`;
+                } else if (modoRevisarFaltantes && !esFaltantes) {
+                    onclickFunction = `seleccionarManifiesto(${JSON.stringify(manifiesto).replace(/"/g, '&quot;')})`;
+                } else {
+                    // Siempre permitir expandir/contraer, incluso para listas de faltantes
+                    onclickFunction = `toggleManifiesto(${manifiesto.id})`;
+                }
+
+                return `
+                    <div class="manifiesto-item" style="${estiloFaltantes}">
+                        <div class="manifiesto-header" ${seleccionClass} onclick="${onclickFunction}">
+                            <div>
+                                ${checkbox}
+                                <span style="margin-right: 10px;">${expandIcon}</span>
+                                ${iconoFaltantes}
+                                <strong>${manifiesto.nombre}</strong>
+                                <small style="color: rgba(255,255,255,0.7); margin-left: 1rem;">${manifiesto.fecha}</small>
+                            </div>
+                            <div>
+                                <span style="color: rgba(255,255,255,0.8);">${esFaltantes ? 'Lista de Faltantes' : (manifiesto.datos ? manifiesto.datos.length : 0) + ' registro(s)'}</span>
+                            </div>
+                        </div>
+                        <div class="manifiesto-detalle ${detalleClass}">
+                            ${manifiesto.expandido ? generarTablaManifiesto(manifiesto) : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function actualizarBotones() {
+            // Habilitar/deshabilitar botón eliminar carpetas
+            document.getElementById('eliminarCarpeta').disabled = carpetas.length === 0;
+            
+            // Habilitar/deshabilitar botón eliminar manifiestos
+            const totalManifiestos = carpetas.reduce((total, carpeta) => total + carpeta.manifiestos.length, 0);
+            document.getElementById('eliminarManifiesto').disabled = totalManifiestos === 0;
+        }
+
+        function eliminarListaFaltantesEspecifica(listaFaltantesId) {
+            // Buscar la lista de faltantes en todas las carpetas
+            let carpetaEncontrada = null;
+            let listaEncontrada = null;
+
+            carpetas.forEach(carpeta => {
+                const lista = carpeta.manifiestos.find(m => m.id === listaFaltantesId);
+                if (lista) {
+                    carpetaEncontrada = carpeta;
+                    listaEncontrada = lista;
+                }
+            });
+
+            if (listaEncontrada && carpetaEncontrada) {
+                if (confirm(`¿Eliminar la lista "${listaEncontrada.nombre}"?`)) {
+                    carpetaEncontrada.manifiestos = carpetaEncontrada.manifiestos.filter(m => m.id !== listaFaltantesId);
+                    guardarDatos();
+                    actualizarCarpetas();
+                    mostrarMensaje('Lista de faltantes eliminada.');
+                }
+            }
+        }
+
+        // Función para actualizar las listas de faltantes cuando se escanea un código
+        function actualizarListaFaltantesDesdeCamara() {
+            // Recargar datos escaneados desde localStorage
+            try {
+                const escaneados = localStorage.getItem('manifiestos_escaneados');
+                if (escaneados) {
+                    manifiestosEscaneados = JSON.parse(escaneados);
+                }
+            } catch (error) {
+                console.error('Error cargando datos escaneados:', error);
+            }
+
+            // Buscar si hay listas de faltantes y actualizar la vista
+            let hayListasFaltantes = false;
+            carpetas.forEach(carpeta => {
+                carpeta.manifiestos.forEach(manifiesto => {
+                    if (manifiesto.tipo === 'faltantes') {
+                        hayListasFaltantes = true;
+                    }
+                });
+            });
+
+            // Si hay listas de faltantes, actualizar la vista completa
+            if (hayListasFaltantes) {
+                actualizarCarpetas();
+            }
+        }
+
+        // Escuchar cambios en localStorage para actualizar automáticamente
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'manifiestos_escaneados') {
+                actualizarListaFaltantesDesdeCamara();
+            }
+        });
+
+        // También verificar periódicamente por cambios
+        setInterval(actualizarListaFaltantesDesdeCamara, 2000);
+
+        // Cargar datos al iniciar la página
+        window.addEventListener('DOMContentLoaded', function() {
+            cargarDatos();
+            actualizarCarpetas();
+            actualizarBotones();
+
+            // Verificar cambios en localStorage cada segundo
+            setInterval(function() {
+                const escaneados = localStorage.getItem('manifiestos_escaneados');
+                if (escaneados) {
+                    const nuevosEscaneados = JSON.parse(escaneados);
+                    if (JSON.stringify(nuevosEscaneados) !== JSON.stringify(manifiestosEscaneados)) {
+                        manifiestosEscaneados = nuevosEscaneados;
+                        actualizarCarpetas();
+                        actualizarBotones();
+                    }
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>
